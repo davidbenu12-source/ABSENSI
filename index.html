@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Absensi Pegawai</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f4f5f7;--card:#fff;--tx:#1b1f24;--mut:#6a727c;--pri:#1a6b3c;--bd:#dde1e6;--in:#1f9d55;--out:#d9822b}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111418;--card:#1b2027;--tx:#eceff3;--mut:#98a1ac;--pri:#3fbf78;--bd:#2c333c}}
+:root[data-theme="dark"]{--bg:#111418;--card:#1b2027;--tx:#eceff3;--mut:#98a1ac;--pri:#3fbf78;--bd:#2c333c}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:560px;margin:0 auto;padding:14px}
+h1{font-size:19px;margin:6px 0 2px}
+.sub{color:var(--mut);font-size:13px;margin-bottom:12px}
+.tabs{display:flex;gap:6px;margin-bottom:12px}
+.tabs button{flex:1;padding:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:10px;font:inherit;cursor:pointer}
+.tabs button.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:12px}
+label{display:block;font-size:12px;color:var(--mut);margin:10px 0 3px}
+input,select{width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit}
+.btn{width:100%;padding:13px;border:0;border-radius:10px;background:var(--pri);color:#fff;font:600 15px inherit;cursor:pointer;margin-top:10px}
+.btn.in{background:var(--in)}.btn.out{background:var(--out)}.btn.g{background:var(--bd);color:var(--tx)}
+.btn:disabled{opacity:.5}
+.row{display:flex;gap:8px}.row>*{flex:1}
+.cam{position:relative;background:#000;border-radius:12px;overflow:hidden;aspect-ratio:3/4}
+.cam video,.cam img{width:100%;height:100%;object-fit:cover;display:block}
+video{transform:scaleX(-1)}
+.clock{font-size:34px;font-weight:700;text-align:center}
+.msg{font-size:13px;color:var(--mut);margin-top:8px;text-align:center}
+.hide{display:none}
+.day{border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:12px;background:var(--card)}
+.day h3{margin:0 0 8px;font-size:14px}
+.day dl{display:grid;grid-template-columns:90px 1fr;gap:2px 6px;margin:0 0 8px;font-size:13px}
+.day dt{color:var(--mut)}.day dd{margin:0}
+.ph{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ph div{font-size:12px;text-align:center;color:var(--mut)}
+.ph img{width:100%;border-radius:8px;display:block;margin-bottom:3px}
+.empty{height:120px;display:flex;align-items:center;justify-content:center;border:1px dashed var(--bd);border-radius:8px;margin-bottom:3px}
+.ket{display:inline-block;padding:2px 10px;border-radius:99px;background:var(--pri);color:#fff;font-size:12px}
+.sign{margin-top:14px;font-size:13px;text-align:right}
+.wk{width:100%;border-collapse:collapse;table-layout:fixed;background:var(--card);font-size:12px}
+.wk th,.wk td{border:1px solid var(--bd);padding:6px;text-align:center;vertical-align:middle}
+.wk td img{width:100%;border-radius:4px;display:block}
+.wk td small{color:var(--mut)}
+.wkh{display:flex;gap:10px;align-items:center;margin-bottom:8px}
+.wkh img{height:48px}.wkh b{display:block;font-size:14px}
+.wki{font-size:12px;margin-bottom:8px}.wki td{border:0;padding:1px 6px 1px 0;text-align:left;vertical-align:top}
+.wlab{font-weight:600;text-align:center;margin:0 0 8px}
+@page{size:A4;margin:12mm}
+@media print{body{background:#fff;color:#000}.tabs,.noprint,h1,.sub{display:none}.wrap{max-width:none;padding:0}.wk{background:#fff;font-size:11px}.wk td img{width:3cm}.wk tr{page-break-inside:avoid}.wk th,.wk td,.wk td small,.wki td{color:#000;border-color:#000}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Absensi Pegawai</h1>
+<div class="sub" id="instLabel">Isi profil terlebih dahulu</div>
+<div class="tabs">
+ <button data-t="abs" class="on">Absen</button>
+ <button data-t="rep">Laporan</button>
+ <button data-t="prof">Profil</button>
+</div>
+
+<section id="abs">
+ <div class="card">
+  <div class="clock" id="clock">--:--</div>
+  <div class="msg" id="dateLbl"></div>
+  <div class="cam" style="margin-top:10px">
+   <video id="vid" autoplay playsinline muted></video>
+   <img id="prev" class="hide" alt="">
+  </div>
+  <div class="msg" id="gps">Lokasi: menunggu izin GPS…</div>
+  <label>Keterangan hari ini</label>
+  <select id="ket"><option>Hadir</option><option>WFH</option><option>Dinas Luar</option></select>
+  <div class="row">
+   <button class="btn in" id="bIn">Absen Masuk</button>
+   <button class="btn out" id="bOut">Absen Pulang</button>
+  </div>
+  <div class="msg" id="status"></div>
+ </div>
+</section>
+
+<section id="rep" class="hide">
+ <div class="row noprint" style="margin-bottom:10px"><button class="btn g" id="wkPrev" style="margin:0">‹ Minggu lalu</button><button class="btn g" id="wkNext" style="margin:0">Minggu depan ›</button></div>
+ <div id="repList"></div>
+ <button class="btn noprint" onclick="try{window.print()}catch(e){}">Cetak / Simpan PDF</button>
+ <div class="card noprint" style="margin-top:12px"><b>Data &amp; cadangan</b>
+  <div class="msg" id="stInfo" style="text-align:left"></div>
+  <button class="btn g" id="bBackup">Cadangkan data (.json)</button>
+  <button class="btn g" id="bRestore">Pulihkan dari cadangan</button>
+  <input type="file" id="fRestore" accept=".json,application/json" class="hide">
+  <label>Hapus data per bulan (setelah laporan dicetak)</label>
+  <select id="delMonth"></select>
+  <button class="btn g" id="bDelMonth">Hapus bulan terpilih</button></div>
+</section>
+
+<section id="prof" class="hide">
+ <div class="card">
+  <label>Nama Instansi</label><input id="p_inst" placeholder="Dinas Kearsipan dan Perpustakaan">
+  <label>Logo Instansi (PNG/JPG)</label><input id="p_logo" type="file" accept="image/*">
+  <img id="logoPrev" class="hide" style="height:56px;margin-top:8px" alt="">
+  <label>Nama</label><input id="p_nama">
+  <label>NIP</label><input id="p_nip" inputmode="numeric">
+  <div class="row"><div><label>Status</label><input id="p_status" placeholder="PPPK"></div>
+  <div><label>Gol/Ruang</label><input id="p_gol" placeholder="Penata Muda /IX"></div></div>
+  <label>Jabatan</label><input id="p_jab">
+  <label>Nama Kepala Instansi</label><input id="p_kepala">
+  <label>NIP Kepala</label><input id="p_kepnip">
+  <label>Kota (untuk tanda tangan)</label><input id="p_kota">
+  <button class="btn" id="bSave">Simpan Profil</button>
+ </div>
+</section>
+</div>
+<canvas id="cv" class="hide"></canvas>
+
+<script>
+const $=id=>document.getElementById(id);
+const HARI=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+const BLN=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+const pad=n=>String(n).padStart(2,'0');
+const ld=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}};
+const sv=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}};
+let prof=ld('abs_prof',{}),recs={},pos=null,stream=null;
+const fmtDate=d=>`${HARI[d.getDay()]}, ${d.getDate()} ${BLN[d.getMonth()]} ${d.getFullYear()}`;
+const key=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+
+/* tabs */
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+ document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));
+ ['abs','rep','prof'].forEach(t=>$(t).classList.toggle('hide',t!==b.dataset.t));
+ if(b.dataset.t==='rep'){renderRep();fillMonths()}
+});
+
+/* clock */
+function tick(){const d=new Date();$('clock').textContent=`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;$('dateLbl').textContent=fmtDate(d)}
+setInterval(tick,1000);tick();
+
+/* profile */
+const fields={inst:'p_inst',nama:'p_nama',nip:'p_nip',status:'p_status',gol:'p_gol',jab:'p_jab',kepala:'p_kepala',kepnip:'p_kepnip',kota:'p_kota'};
+function loadProf(){
+ for(const k in fields)$(fields[k]).value=prof[k]||'';
+ $('instLabel').textContent=prof.nama?`${prof.nama} · ${prof.inst||''}`:'Isi profil terlebih dahulu';
+ if(prof.logo){$('logoPrev').src=prof.logo;$('logoPrev').classList.remove('hide')}
+}
+$('p_logo').onchange=e=>{
+ const f=e.target.files[0];if(!f)return;
+ const r=new FileReader();r.onload=()=>{
+  const im=new Image();im.onload=()=>{
+   const c=document.createElement('canvas');const s=Math.min(1,200/Math.max(im.width,im.height));
+   c.width=im.width*s;c.height=im.height*s;c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+   prof.logo=c.toDataURL('image/png');$('logoPrev').src=prof.logo;$('logoPrev').classList.remove('hide');
+  };im.src=r.result};r.readAsDataURL(f);
+};
+$('bSave').onclick=()=>{
+ for(const k in fields)prof[k]=$(fields[k]).value.trim();
+ sv('abs_prof',prof);loadProf();alert('Profil tersimpan');
+};
+
+/* camera + gps */
+async function startCam(){
+ try{
+  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:1080},height:{ideal:1440}},audio:false});
+  $('vid').srcObject=stream;
+ }catch(e){$('status').textContent='Kamera tidak bisa diakses. Izinkan akses kamera di browser.'}
+}
+function startGps(){
+ if(!navigator.geolocation){$('gps').textContent='GPS tidak didukung perangkat ini';return}
+ navigator.geolocation.watchPosition(p=>{pos={lat:p.coords.latitude,lng:p.coords.longitude,acc:p.coords.accuracy};
+  $('gps').textContent=`Lokasi: ${pos.lat.toFixed(6)}, ${pos.lng.toFixed(6)} (±${Math.round(pos.acc)} m)`},
+  ()=>{$('gps').textContent='Lokasi ditolak. Izinkan GPS untuk absen.'},{enableHighAccuracy:true,maximumAge:5000});
+}
+
+/* compose photo */
+function compose(type,now){
+ return new Promise(res=>{
+  const v=$('vid'),W=720,H=960,c=$('cv');c.width=W;c.height=H;const x=c.getContext('2d');
+  const vw=v.videoWidth,vh=v.videoHeight,sc=Math.max(W/vw,H/vh),dw=vw*sc,dh=vh*sc;
+  x.save();x.translate(W,0);x.scale(-1,1);x.drawImage(v,(W-dw)/2,(H-dh)/2,dw,dh);x.restore();
+  const g=x.createLinearGradient(0,H-300,0,H);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.75)');
+  x.fillStyle=g;x.fillRect(0,H-300,W,300);
+  const t=`${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  // badge
+  x.fillStyle=type==='in'?'#1f9d55':'#d9822b';x.beginPath();x.roundRect(24,24,type==='in'?190:200,44,8);x.fill();
+  x.fillStyle='#fff';x.font='bold 24px sans-serif';x.fillText(type==='in'?'Absen Masuk':'Absen Pulang',38,55);
+  x.fillStyle='rgba(0,0,0,.55)';x.beginPath();x.roundRect(222,24,110,44,8);x.fill();
+  x.fillStyle='#fff';x.font='bold 30px sans-serif';x.fillText(t,234,57);
+  const finish=()=>{
+   x.fillStyle='#fff';x.shadowColor='#000';x.shadowBlur=6;
+   let y=H-205;x.font='bold 30px sans-serif';
+   x.fillText(`${fmtDate(now)} ${t}:${pad(now.getSeconds())} WITA`.replace(' WITA',''),28,y);
+   x.font='24px sans-serif';y+=36;
+   x.fillText(pos?`Lat ${pos.lat.toFixed(6)}  Lng ${pos.lng.toFixed(6)}`:'Lokasi tidak tersedia',28,y);
+   y+=34;x.fillText(prof.nama||'',28,y);
+   y+=32;x.font='20px sans-serif';x.fillText(`NIP ${prof.nip||''}`,28,y);
+   y+=30;x.fillText(prof.inst||'',28,y);
+   x.shadowBlur=0;
+   res(c.toDataURL('image/jpeg',.7));
+  };
+  if(prof.logo){const l=new Image();l.onload=()=>{
+    const s=90/Math.max(l.width,l.height);x.fillStyle='rgba(255,255,255,.85)';x.beginPath();x.arc(W-72,72,56,0,7);x.fill();
+    x.drawImage(l,W-72-l.width*s/2,72-l.height*s/2,l.width*s,l.height*s);finish()};l.src=prof.logo}
+  else finish();
+ });
+}
+
+async function absen(type){
+ if(!prof.nama){alert('Isi profil dulu.');return}
+ if(!pos){alert('Lokasi belum tersedia. Izinkan GPS dan tunggu sebentar.');return}
+ if(!$('vid').videoWidth){alert('Kamera belum siap.');return}
+ const now=new Date(),k=key(now);
+ recs[k]=recs[k]||{};
+ if(recs[k][type]&&!confirm('Sudah absen. Timpa data sebelumnya?'))return;
+ const img=await compose(type,now);
+ recs[k][type]={img,time:`${pad(now.getHours())}:${pad(now.getMinutes())}`,lat:pos.lat,lng:pos.lng};
+ recs[k].ket=$('ket').value;
+ try{await idbPut(k,recs[k])}catch(e){alert('Penyimpanan penuh atau ditolak browser. Cadangkan data, cetak laporan, lalu hapus bulan lama di tab Laporan.');return}
+ $('prev').src=img;$('prev').classList.remove('hide');$('vid').classList.add('hide');
+ $('status').textContent=`Absen ${type==='in'?'masuk':'pulang'} tercatat pukul ${recs[k][type].time}`;
+ setTimeout(()=>{$('prev').classList.add('hide');$('vid').classList.remove('hide')},3500);
+}
+$('bIn').onclick=()=>absen('in');$('bOut').onclick=()=>absen('out');
+
+/* report */
+function renderRepOld(){
+ const ks=Object.keys(recs).sort().reverse();
+ if(!ks.length){$('repList').innerHTML='<div class="card msg">Belum ada data absensi.</div>';return}
+ const esc=s=>String(s||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+ let h='';
+ ks.forEach(k=>{
+  const r=recs[k],d=new Date(k+'T00:00:00');
+  const ph=(o,l)=>o?`<div><img src="${o.img}" alt="${l}">${l} ${o.time}</div>`:`<div><div class="empty">${r.ket==='WFH'?'wfh':'-'}</div>${l}</div>`;
+  h+=`<div class="day"><h3>HARI/TANGGAL : ${fmtDate(d)}</h3><dl>
+  <dt>Nama</dt><dd>${esc(prof.nama)}</dd><dt>NIP</dt><dd>${esc(prof.nip)}</dd>
+  <dt>Status</dt><dd>${esc(prof.status)}</dd><dt>Gol/Ruang</dt><dd>${esc(prof.gol)}</dd>
+  <dt>Jabatan</dt><dd>${esc(prof.jab)}</dd><dt>Keterangan</dt><dd><span class="ket">${esc(r.ket||'Hadir')}</span></dd></dl>
+  <div class="ph">${ph(r.in,'Absen Masuk')}${ph(r.out,'Absen Pulang')}</div></div>`;
+ });
+ const now=new Date();
+ h+=`<div class="sign">${esc(prof.kota)}, ${now.getDate()} ${BLN[now.getMonth()]} ${now.getFullYear()}<br>Kepala ${esc(prof.inst)}<br><br><br><br>${esc(prof.kepala)}<br>NIP. ${esc(prof.kepnip)}</div>`;
+ $('repList').innerHTML=h;
+}
+let wk=0;
+const esc=s=>String(s||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const monday=o=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7)+o*7);return d};
+function renderRep(){
+ const m=monday(wk),days=[];
+ for(let i=0;i<7;i++){const d=new Date(m);d.setDate(m.getDate()+i);days.push(d)}
+ const shown=days.filter((d,i)=>i<5||recs[key(d)]);
+ const a=shown[0],z=shown[shown.length-1];
+ const cell=(o,r)=>o?`<img src="${o.img}" alt=""><small>${o.time}</small>`:`<small>${(r.ket&&r.ket!=='Hadir')?r.ket.toLowerCase():'-'}</small>`;
+ let h=`<div class="wkh">${prof.logo?`<img src="${prof.logo}" alt="">`:''}<div><b>REKAP ABSENSI MINGGUAN</b>${esc(prof.inst)}</div></div>
+ <table class="wki"><tr><td>Nama</td><td>: ${esc(prof.nama)}</td></tr><tr><td>NIP</td><td>: ${esc(prof.nip)}</td></tr><tr><td>Status</td><td>: ${esc(prof.status)}</td></tr><tr><td>Gol/Ruang</td><td>: ${esc(prof.gol)}</td></tr><tr><td>Jabatan</td><td>: ${esc(prof.jab)}</td></tr></table>
+ <p class="wlab">Minggu: ${a.getDate()} ${BLN[a.getMonth()]} – ${z.getDate()} ${BLN[z.getMonth()]} ${z.getFullYear()}</p>
+ <table class="wk"><thead><tr><th style="width:21%">Hari/Tanggal</th><th style="width:29%">Absen Masuk</th><th style="width:29%">Absen Pulang</th><th style="width:21%">Keterangan</th></tr></thead><tbody>`;
+ shown.forEach(d=>{
+  const r=recs[key(d)]||{};
+  h+=`<tr><td>${HARI[d.getDay()]}<br><small>${d.getDate()} ${BLN[d.getMonth()].slice(0,3)} ${d.getFullYear()}</small></td><td>${cell(r.in,r)}</td><td>${cell(r.out,r)}</td><td>${esc(r.ket||((r.in||r.out)?'Hadir':'-'))}</td></tr>`;
+ });
+ h+=`</tbody></table><div class="sign">${esc(prof.kota)}, ${z.getDate()} ${BLN[z.getMonth()]} ${z.getFullYear()}<br>Kepala ${esc(prof.inst)}<br><br><br><br>${esc(prof.kepala)}<br>NIP. ${esc(prof.kepnip)}</div>`;
+ $('repList').innerHTML=h;
+}
+$('wkPrev').onclick=()=>{wk--;renderRep()};$('wkNext').onclick=()=>{wk++;renderRep()};
+
+
+/* IndexedDB storage */
+const DB=()=>new Promise((res,rej)=>{const r=indexedDB.open('absensi',1);r.onupgradeneeded=()=>r.result.createObjectStore('recs');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+const idbPut=async(k,v)=>{const db=await DB();return new Promise((res,rej)=>{const t=db.transaction('recs','readwrite');t.objectStore('recs').put(v,k);t.oncomplete=()=>res(true);t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error)})};
+const idbDel=async k=>{const db=await DB();return new Promise((res,rej)=>{const t=db.transaction('recs','readwrite');t.objectStore('recs').delete(k);t.oncomplete=()=>res(true);t.onerror=()=>rej(t.error)})};
+const idbAll=async()=>{const db=await DB();return new Promise((res,rej)=>{const o={},q=db.transaction('recs').objectStore('recs').openCursor();q.onsuccess=()=>{const c=q.result;if(c){o[c.key]=c.value;c.continue()}else res(o)};q.onerror=()=>rej(q.error)})};
+async function initData(){
+ try{const old=ld('abs_recs',null);if(old){for(const k in old)await idbPut(k,old[k]);try{localStorage.removeItem('abs_recs')}catch(e){}}recs=await idbAll()}
+ catch(e){$('status').textContent='Penyimpanan browser tidak tersedia'}
+ try{navigator.storage.persist()}catch(e){}
+ fillMonths();
+}
+function fillMonths(){
+ const ms=[...new Set(Object.keys(recs).map(k=>k.slice(0,7)))].sort().reverse();
+ $('delMonth').innerHTML=ms.length?ms.map(m=>{const[y,mo]=m.split('-');return `<option value='${m}'>${BLN[+mo-1]} ${y}</option>`}).join(''):'<option value="">(belum ada data)</option>';
+ try{navigator.storage.estimate().then(e=>{$('stInfo').textContent=`Hari tercatat: ${Object.keys(recs).length} · Terpakai ±${(e.usage/1048576).toFixed(1)} MB dari ±${Math.round(e.quota/1048576)} MB`})}catch(e){}
+}
+$('bBackup').onclick=async()=>{
+ const blob=new Blob([JSON.stringify({v:1,prof,recs})],{type:'application/json'}),name=`cadangan-absensi-${key(new Date())}.json`;
+ try{const f=new File([blob],name,{type:'application/json'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});return}}catch(e){if(e&&e.name==='AbortError')return}
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();
+};
+$('bRestore').onclick=()=>$('fRestore').click();
+$('fRestore').onchange=e=>{
+ const f=e.target.files[0];if(!f)return;const r=new FileReader();
+ r.onload=async()=>{try{const d=JSON.parse(r.result);if(!d.recs)throw 0;
+  for(const k in d.recs){recs[k]=d.recs[k];await idbPut(k,d.recs[k])}
+  if(d.prof&&!prof.nama){prof=d.prof;sv('abs_prof',prof);loadProf()}
+  fillMonths();renderRep();alert('Data berhasil dipulihkan')}catch(x){alert('File cadangan tidak valid')}};
+ r.readAsText(f);e.target.value='';
+};
+$('bDelMonth').onclick=async()=>{
+ const m=$('delMonth').value;if(!m)return;
+ if(!confirm('Hapus semua data bulan ini? Pastikan sudah dicetak atau dicadangkan.'))return;
+ for(const k of Object.keys(recs))if(k.startsWith(m)){delete recs[k];await idbDel(k)}
+ fillMonths();renderRep();
+};
+
+loadProf();startCam();startGps();initData();
+</script>
+</body>
+</html>
